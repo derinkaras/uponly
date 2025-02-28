@@ -14,7 +14,7 @@ import {
 import Authentication from './Authentication';
 import Modal from './Modal';
 import { useAuth } from '../context/AuthContext';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../../firebase';
   
 export default function FinanceForm(props){
@@ -50,9 +50,9 @@ export default function FinanceForm(props){
     const [transactionCost, setTransactionCost] = useState("")
     const [transactionDescription, setTransactionDescription] = useState("")
     
-    // Derived state
-    const expensesToShow = showAllExpenses ? sortedExpenses : sortedExpenses.slice(0, 3);
-    const incomeToShow = showAllIncome ? sortedIncome : sortedIncome.slice(0, 3);
+    // Initialize with empty arrays instead of null
+    const [expensesToShow, setExpensesToShow] = useState([])
+    const [incomeToShow, setIncomeToShow] = useState([])
 
     // Update calculated values when globalData changes
     useEffect(() => {
@@ -77,6 +77,9 @@ export default function FinanceForm(props){
                 );
                 const sortedIncomeData = incomeTransactions.sort((a, b) => parseInt(b[0], 10) - parseInt(a[0], 10));
                 setSortedIncome(sortedIncomeData);
+                
+                // Don't set expensesToShow and incomeToShow here
+                // They will be updated by separate useEffects
             } catch (err) {
                 console.error("Error sorting transactions:", err);
                 setSortedExpenses([]);
@@ -84,6 +87,15 @@ export default function FinanceForm(props){
             }
         }
     }, [globalData]); // Only re-run when globalData changes
+
+    // Add separate useEffects to update expensesToShow and incomeToShow
+    useEffect(() => {
+        setExpensesToShow(showAllExpenses ? sortedExpenses : sortedExpenses.slice(0, 3));
+    }, [sortedExpenses, showAllExpenses]);
+    
+    useEffect(() => {
+        setIncomeToShow(showAllIncome ? sortedIncome : sortedIncome.slice(0, 3));
+    }, [sortedIncome, showAllIncome]);
 
     // Add new transaction entry
     async function addEntry(category, amount, type, description, callback) {
@@ -131,6 +143,30 @@ export default function FinanceForm(props){
             
         } catch (err) {
             console.log(err.message)
+        }
+    }
+    
+    // Delete transaction entry
+    async function deleteEntry(timestamp) {
+        if (!globalUser) return;
+        
+        try {
+            // First update local state
+            // React state immutability rather then access and mutate the state object directly we must copy it, delete stuff from the copy of the state object and then reset that state object 
+            const newGlobalData = {...globalData}
+            delete newGlobalData[timestamp]
+            setGlobalData(newGlobalData)
+            
+            // Then update Firebase
+            const userRef = doc(db, 'users', globalUser.uid);
+            await updateDoc(userRef, {
+                [timestamp]: deleteField()
+            });
+            
+            console.log(`Transaction ${timestamp} deleted successfully`);
+        } catch (err) {
+            console.error("Error deleting transaction:", err);
+            alert("Failed to delete transaction. Please try again.");
         }
     }
     
@@ -209,11 +245,20 @@ export default function FinanceForm(props){
                     ))
                 ) : (
                     <>
-                        {expensesToShow.map(([transDate, transDetails], index) => {
+                        {expensesToShow && expensesToShow.map(([transDate, transDetails], index) => {
                             const timestamp = parseInt(transDate, 10);
                             return (
                                 <div className="transaction-card expenses-card" key={index}> 
-                                    <p className="transaction-card-date expenses-card-date">{formatTimestamp(timestamp, "date-only")}</p>
+                                    <div className="transaction-card-header">
+                                        <p className="transaction-card-date expenses-card-date">{formatTimestamp(timestamp, "date-only")}</p>
+                                        <button 
+                                            className="transaction-delete-btn"
+                                            onClick={() => deleteEntry(transDate)}
+                                            title="Delete transaction"
+                                        >
+                                            <i className="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
                                     
                                     <div className="transaction-card-row expenses-card-row">
                                         <span className="transaction-card-label expenses-card-label">Category:</span>
@@ -258,7 +303,7 @@ export default function FinanceForm(props){
 
     // Render the Income Section
     const renderIncomeSection = () => {
-        if (incomeByCat === null ){
+        if (incomeByCat === null){
             return null;
         }
         return (
@@ -285,12 +330,21 @@ export default function FinanceForm(props){
                     ))
                 ) : (
                     <>
-                        {incomeToShow.map(([transDate, transDetails], index) => {
+                        {incomeToShow && incomeToShow.map(([transDate, transDetails], index) => {
                             const timestamp = parseInt(transDate, 10);
                             return (
                                 <div className="transaction-card income-card" key={index}> 
-                                    <p className="transaction-card-date income-card-date">{formatTimestamp(timestamp, "date-only")}</p>
-                                    
+                                    <div className="transaction-card-header">
+                                        <p className="transaction-card-date income-card-date">{formatTimestamp(timestamp, "date-only")}</p>
+                                        <button 
+                                            className="transaction-delete-btn"
+                                            onClick={() => deleteEntry(transDate)}
+                                            title="Delete transaction"
+                                        >
+                                            <i className="fa-solid fa-trash-can"></i>
+                                        </button>
+                                    </div>
+
                                     <div className="transaction-card-row income-card-row">
                                         <span className="transaction-card-label income-card-label">Category:</span>
                                         <span className="transaction-card-value income-card-value">{transDetails.category}</span>
@@ -331,8 +385,6 @@ export default function FinanceForm(props){
             </div>
         );
     }
-
-
 
     // Render the Add Entries Form
     const renderAddEntriesForm = () => {
@@ -385,7 +437,6 @@ export default function FinanceForm(props){
             </div>
         );
     }
-    
     
     function handleCloseModal(){
         setShowModal(false)

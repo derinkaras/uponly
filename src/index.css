@@ -289,6 +289,7 @@ header button {
   margin-bottom: 16px;
   border: 1px solid var(--border-primary);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
 }
 
 .transaction-card:hover,
@@ -298,13 +299,56 @@ header button {
   border-color: var(--border-secondary);
 }
 
+/* Transaction Card Header with Delete Button */
+.transaction-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
 .transaction-card-date,
 .expenses-card-date {
   font-weight: 600;
   color: var(--color-primary);
-  margin-bottom: 12px;
-  border-bottom: 1px solid var(--border-primary);
-  padding-bottom: 8px;
+  margin-bottom: 0;
+}
+
+/* Delete Button Styling */
+.transaction-delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  opacity: 0.6;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin: 0;
+}
+
+.transaction-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  opacity: 1;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.transaction-delete-btn:active {
+  background-color: rgba(239, 68, 68, 0.2);
+  transform: scale(0.95);
+}
+
+.transaction-delete-btn i {
+  font-size: 14px;
 }
 
 .transaction-card-row,
@@ -358,6 +402,12 @@ header button {
   color: #ef4444; /* Red for expenses */
 }
 
+/* Delete button specific for expenses */
+.expenses-card .transaction-delete-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
 /* =============================================
    INCOME-SPECIFIC STYLES
 ============================================== */
@@ -374,6 +424,11 @@ header button {
   color: #10b981; /* Green for income amounts */
 }
 
+/* Delete button specific for income */
+.income-card .transaction-delete-btn:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
 
 /* =============================================
    ADDING ENTRIES
