@@ -272,21 +272,22 @@ export default function FinanceForm(props){
                                 <div className="transaction-card expenses-card" key={index}> 
                                     <div className="transaction-card-header">
                                         <p className="transaction-card-date expenses-card-date">{formatTimestamp(timestamp, "date-only")}</p>
-                                        <button 
-                                            className="transaction-delete-btn"
-                                            onClick={() => deleteEntry(transDate)}
-                                            title="Delete transaction"
-                                        >
-                                            <i className="fa-solid fa-trash-can"></i>
-                                        </button>
-
-                                        <button 
-                                            className="transaction-edit-btn"
-                                            onClick = {() => changeEditEntry(transDate)}
-                                            title="Edit transaction"
-                                        >
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
+                                        <div className="transaction-card-actions">
+                                            <button 
+                                                className="transaction-edit-btn"
+                                                onClick = {() => changeEditEntry(transDate)}
+                                                title="Edit transaction"
+                                            >
+                                                <i className="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button 
+                                                className="transaction-delete-btn"
+                                                onClick={() => deleteEntry(transDate)}
+                                                title="Delete transaction"
+                                            >
+                                                <i className="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
 
 
                                     </div>
@@ -367,21 +368,24 @@ export default function FinanceForm(props){
                                 <div className="transaction-card income-card" key={index}> 
                                     <div className="transaction-card-header">
                                         <p className="transaction-card-date income-card-date">{formatTimestamp(timestamp, "date-only")}</p>
-                                        <button 
-                                            className="transaction-delete-btn"
-                                            onClick={() => deleteEntry(transDate)}
-                                            title="Delete transaction"
-                                        >
-                                            <i className="fa-solid fa-trash-can"></i>
-                                        </button>
+                                        
+                                        <div className="transaction-card-actions">
+                                            <button 
+                                                className="transaction-edit-btn"
+                                                onClick = {() => changeEditEntry(transDate)}
+                                                title="Edit transaction"
+                                            >
+                                                <i className="fa-solid fa-pen-to-square"></i>
+                                            </button>
+                                            <button 
+                                                className="transaction-delete-btn"
+                                                onClick={() => deleteEntry(transDate)}
+                                                title="Delete transaction"
+                                            >
+                                                <i className="fa-solid fa-trash-can"></i>
+                                            </button>
+                                        </div>
 
-                                        <button 
-                                            className="transaction-edit-btn"
-                                            onClick = {() => changeEditEntry(transDate)}
-                                            title="Edit transaction"
-                                        >
-                                            <i class="fa-solid fa-pen-to-square"></i>
-                                        </button>
                                     </div>
 
                                     <div className="transaction-card-row income-card-row">
