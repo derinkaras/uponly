@@ -3,7 +3,7 @@ import { expenseCategories, incomeCategories } from "../utils";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useAuth } from '../context/AuthContext';
-import './EditTransaction.css'; // Import the CSS file
+import './index.css'; // Import the CSS file
 
 export default function EditTransaction(props) {
     const { handleCloseModal, transactionID, transactionData } = props;
