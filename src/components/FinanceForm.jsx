@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { 
-    // Remove transactionHistory import
     calculateTotalMonthlySpending,
     calculateTotalMonthlyIncome,
     getMonthlyExpensesByCategory,
@@ -24,10 +23,10 @@ export default function FinanceForm(props){
     
     // Global stuff
     const { globalData, setGlobalData, globalUser } = useAuth()
-    //console.log("GLOBAL USER: ", globalUser)
     
     // Current month for display
-    let currentMonth = new Date().toLocaleString('default', { month: 'long' })
+    const [currentMonth, setCurrentMonth] = useState("")
+    const [currentMonthNumber, setCurrentMonthNumber] = useState(new Date().getMonth())
     
     // Financial data state - initialize to null
     const [totalSpending, setTotalSpending] = useState(null);
@@ -42,61 +41,108 @@ export default function FinanceForm(props){
     // UI state
     const [expenseTab, setExpenseTab] = useState("overall")
     const [incomeTab, setIncomeTab] = useState("overall")
+
     const [showAllExpenses, setShowAllExpenses] = useState(false)
     const [showAllIncome, setShowAllIncome] = useState(false)
     
+    // Initialize with empty arrays instead of null
+    const [expensesToShow, setExpensesToShow] = useState([])
+    const [incomeToShow, setIncomeToShow] = useState([])
+
     // Form state for adding entries
     const [transactionType, setTransactionType] = useState("type-base")
     const [transactionCategory, setTransactionCategory] = useState("category-base")
     const [transactionCost, setTransactionCost] = useState("")
     const [transactionDescription, setTransactionDescription] = useState("")
     
-    // Initialize with empty arrays instead of null
-    const [expensesToShow, setExpensesToShow] = useState([])
-    const [incomeToShow, setIncomeToShow] = useState([])
-
     const [isEditEntry, setIsEditEntry] = useState(false)
     const [editingTransaction, setEditingTransaction] = useState(null);
 
-
     function handleCloseModal(){
         setShowModal(false)
+        setIsEditEntry(false)
+    }
+
+    // Initialize current month when component mounts
+    useEffect(() => {
+        const now = new Date();
+        setCurrentMonth(now.toLocaleString('default', { month: 'long' }));
+        setCurrentMonthNumber(now.getMonth());
+    }, []);
+
+    function filterIncomeToCurrentMonth() {
+        // Goes into the globalData and filters for current month income transactions
+        if (!globalData) return [];
+        
+        try {
+            const filtered = Object.entries(globalData).filter(([time, details]) => {
+                if (!details || !details.type) return false;
+                
+                const entryDate = new Date(parseInt(time, 10));
+                const entryMonth = entryDate.getMonth();
+                
+                return details.type.toLowerCase() === "income" && entryMonth === currentMonthNumber;
+            });
+            
+            return filtered;
+        } catch (err) {
+            console.error("Error filtering income transactions:", err);
+            return [];
+        }
+    }
+    
+    function filterExpensesToCurrentMonth() {
+        // Goes into the globalData and filters for current month expenses transactions
+        if (!globalData) return [];
+        
+        try {
+            const filtered = Object.entries(globalData).filter(([time, details]) => {
+                if (!details || !details.type) return false;
+                
+                const entryDate = new Date(parseInt(time, 10));
+                const entryMonth = entryDate.getMonth();
+                
+                return details.type.toLowerCase() === "expense" && entryMonth === currentMonthNumber;
+            });
+            
+            return filtered;
+        } catch (err) {
+            console.error("Error filtering expense transactions:", err);
+            return [];
+        }
     }
 
     // Update calculated values when globalData changes
     useEffect(() => {
         if (globalData) {
-            // Update financial calculations
-            setTotalSpending(calculateTotalMonthlySpending(globalData));
-            setTotalIncome(calculateTotalMonthlyIncome(globalData));
-            setExpenseByCat(getMonthlyExpensesByCategory(globalData));
-            setIncomeByCat(getMonthlyIncomeByCategory(globalData));
-            
             try {
+                // Update financial calculations
+                setTotalSpending(calculateTotalMonthlySpending(globalData));
+                setTotalIncome(calculateTotalMonthlyIncome(globalData));
+                setExpenseByCat(getMonthlyExpensesByCategory(globalData));
+                setIncomeByCat(getMonthlyIncomeByCategory(globalData));
+                
                 // Update sorted transactions
-                const expenseTransactions = Object.entries(globalData).filter(([timestamp, transDetails]) => 
-                    transDetails.type && transDetails.type.toLowerCase() === 'expense'
-                );
+                const expenseTransactions = filterExpensesToCurrentMonth();
+                console.log("Found expense transactions:", expenseTransactions.length);
+                
                 const sortedExpensesData = expenseTransactions.sort((a, b) => parseInt(b[0], 10) - parseInt(a[0], 10));
                 setSortedExpenses(sortedExpensesData);
                 
                 // Extract and sort income transactions
-                const incomeTransactions = Object.entries(globalData).filter(([timestamp, transDetails]) => 
-                    transDetails.type && transDetails.type.toLowerCase() === 'income'
-                );
+                const incomeTransactions = filterIncomeToCurrentMonth();
+                console.log("Found income transactions:", incomeTransactions.length);
+                
                 const sortedIncomeData = incomeTransactions.sort((a, b) => parseInt(b[0], 10) - parseInt(a[0], 10));
                 setSortedIncome(sortedIncomeData);
-                
-                // Don't set expensesToShow and incomeToShow here
-                // They will be updated by separate useEffects
             } catch (err) {
-                console.error("Error sorting transactions:", err);
+                console.error("Error processing transaction data:", err);
                 setSortedExpenses([]);
                 setSortedIncome([]);
             }
         }
-    }, [globalData]); // Only re-run when globalData changes
-
+    }, [globalData, currentMonthNumber]); // Re-run when globalData or currentMonthNumber changes
+    
     // Add separate useEffects to update expensesToShow and incomeToShow
     useEffect(() => {
         setExpensesToShow(showAllExpenses ? sortedExpenses : sortedExpenses.slice(0, 3));
@@ -114,16 +160,21 @@ export default function FinanceForm(props){
             return;
         }
         
+        // Ensure amount is a positive number
+        const numericAmount = Math.abs(parseFloat(amount));
+        if (isNaN(numericAmount) || numericAmount <= 0) {
+            alert("Please enter a valid amount");
+            return;
+        }
+        
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth() + 1;
         const day = now.getDate();
         const hour = now.getHours();
         const minutes = now.getMinutes();
-        const timestamp = createTimestamp(year, month, day, hour, minutes);
-        
-        // Convert amount to number
-        const numericAmount = parseFloat(amount);
+        const seconds = now.getSeconds(); // Add seconds for more unique timestamps
+        const timestamp = createTimestamp(year, month, day, hour, minutes, seconds);
         
         try {
             const newData = {           
@@ -134,37 +185,44 @@ export default function FinanceForm(props){
             }
     
             // First operation - update local state
-            const newGlobalData = {...(globalData || {})}
-            newGlobalData[timestamp] = newData
-            setGlobalData(newGlobalData)
-            console.log(timestamp, category, numericAmount, type, description)
+            const newGlobalData = {...(globalData || {})};
+            newGlobalData[timestamp] = newData;
+            
+            console.log("Adding new entry:", timestamp, newData);
+            
+            setGlobalData(newGlobalData);
     
             // Second operation - update firebase
             if (globalUser) {
-                const userRef = doc(db, 'users', globalUser.uid)
+                const userRef = doc(db, 'users', globalUser.uid);
                 await setDoc(userRef, {
                     [timestamp]: newData
-                }, {merge: true})
+                }, {merge: true});
+                
+                console.log("Entry added to Firebase successfully");
             }
             
             // Call the callback to refresh data and reset form
             if (callback) callback();
             
         } catch (err) {
-            console.log(err.message)
+            console.error("Error adding entry:", err);
+            alert("Failed to add entry. Please try again.");
         }
     }
     
     // Delete transaction entry
     async function deleteEntry(timestamp) {
-        if (!globalUser) return;
+        if (!globalUser) {
+            alert("You must be logged in to delete entries");
+            return;
+        }
         
         try {
             // First update local state
-            // React state immutability rather then access and mutate the state object directly we must copy it, delete stuff from the copy of the state object and then reset that state object 
-            const newGlobalData = {...globalData}
-            delete newGlobalData[timestamp]
-            setGlobalData(newGlobalData)
+            const newGlobalData = {...globalData};
+            delete newGlobalData[timestamp];
+            setGlobalData(newGlobalData);
             
             // Then update Firebase
             const userRef = doc(db, 'users', globalUser.uid);
@@ -178,24 +236,24 @@ export default function FinanceForm(props){
             alert("Failed to delete transaction. Please try again.");
         }
     }
-    
-
 
     function changeEditEntry(transDate) {
         // Logic for editing a details card
-        setEditingTransaction(transDate)
-        setShowModal(true)
-        setIsEditEntry(true)
+        if (!globalData || !globalData[transDate]) {
+            alert("Cannot edit this entry at the moment. Please try again.");
+            return;
+        }
+        
+        setEditingTransaction(transDate);
+        setShowModal(true);
+        setIsEditEntry(true);
     }
-
-
-
 
     // Form submission handler
     const handleAddEntry = () => {
         if (!isAuthenticated){
-            setShowModal(true)
-            return
+            setShowModal(true);
+            return;
         }
         
         addEntry(
@@ -209,9 +267,6 @@ export default function FinanceForm(props){
                 setTransactionCategory("category-base");
                 setTransactionCost("");
                 setTransactionDescription("");
-                
-                // No need to manually update states here as the 
-                // useEffect will handle that when globalData changes
             }
         );
     }
@@ -266,56 +321,59 @@ export default function FinanceForm(props){
                     ))
                 ) : (
                     <>
-                        {expensesToShow && expensesToShow.map(([transDate, transDetails], index) => {
-                            const timestamp = parseInt(transDate, 10);
-                            return (
-                                <div className="transaction-card expenses-card" key={index}> 
-                                    <div className="transaction-card-header">
-                                        <p className="transaction-card-date expenses-card-date">{formatTimestamp(timestamp, "date-only")}</p>
-                                        <div className="transaction-card-actions">
-                                            <button 
-                                                className="transaction-edit-btn"
-                                                onClick = {() => changeEditEntry(transDate)}
-                                                title="Edit transaction"
-                                            >
-                                                <i className="fa-solid fa-pen-to-square"></i>
-                                            </button>
-                                            <button 
-                                                className="transaction-delete-btn"
-                                                onClick={() => deleteEntry(transDate)}
-                                                title="Delete transaction"
-                                            >
-                                                <i className="fa-solid fa-trash-can"></i>
-                                            </button>
+                        {expensesToShow && expensesToShow.length > 0 ? (
+                            expensesToShow.map(([transDate, transDetails], index) => {
+                                const timestamp = parseInt(transDate, 10);
+                                return (
+                                    <div className="transaction-card expenses-card" key={index}> 
+                                        <div className="transaction-card-header">
+                                            <p className="transaction-card-date expenses-card-date">{formatTimestamp(timestamp, "date-only")}</p>
+                                            <div className="transaction-card-actions">
+                                                <button 
+                                                    className="transaction-edit-btn"
+                                                    onClick={() => changeEditEntry(transDate)}
+                                                    title="Edit transaction"
+                                                >
+                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                                <button 
+                                                    className="transaction-delete-btn"
+                                                    onClick={() => deleteEntry(transDate)}
+                                                    title="Delete transaction"
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
                                         </div>
-
-
+                                        
+                                        <div className="transaction-card-row expenses-card-row">
+                                            <span className="transaction-card-label expenses-card-label">Category:</span>
+                                            <span className="transaction-card-value expenses-card-value">{transDetails.category}</span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-row expenses-card-row">
+                                            <span className="transaction-card-label expenses-card-label">Amount:</span>
+                                            <span className={`transaction-card-amount expenses-card-amount expense`}>
+                                                ${transDetails.amount}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-row expenses-card-row">
+                                            <span className="transaction-card-label expenses-card-label">Type:</span>
+                                            <span className="transaction-card-value expenses-card-value">{transDetails.type}</span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-description expenses-card-description">
+                                            <span className="transaction-card-label expenses-card-label">Description: </span>
+                                            <span className="transaction-card-value expenses-card-value">{transDetails.description || transDetails.type}</span>
+                                        </div>
                                     </div>
-                                    
-                                    <div className="transaction-card-row expenses-card-row">
-                                        <span className="transaction-card-label expenses-card-label">Category:</span>
-                                        <span className="transaction-card-value expenses-card-value">{transDetails.category}</span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-row expenses-card-row">
-                                        <span className="transaction-card-label expenses-card-label">Amount:</span>
-                                        <span className={`transaction-card-amount expenses-card-amount expense`}>
-                                            ${transDetails.amount}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-row expenses-card-row">
-                                        <span className="transaction-card-label expenses-card-label">Type:</span>
-                                        <span className="transaction-card-value expenses-card-value">{transDetails.type}</span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-description expenses-card-description">
-                                        <span className="transaction-card-label expenses-card-label">Description: </span>
-                                        <span className="transaction-card-value expenses-card-value">{transDetails.description || transDetails.type}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })
+                        ) : (
+                            <p>No expense transactions for this month</p>
+                        )}
+                        
                         {sortedExpenses.length > 3 && (
                             <button 
                                 className="show-more-button"
@@ -362,56 +420,60 @@ export default function FinanceForm(props){
                     ))
                 ) : (
                     <>
-                        {incomeToShow && incomeToShow.map(([transDate, transDetails], index) => {
-                            const timestamp = parseInt(transDate, 10);
-                            return (
-                                <div className="transaction-card income-card" key={index}> 
-                                    <div className="transaction-card-header">
-                                        <p className="transaction-card-date income-card-date">{formatTimestamp(timestamp, "date-only")}</p>
-                                        
-                                        <div className="transaction-card-actions">
-                                            <button 
-                                                className="transaction-edit-btn"
-                                                onClick = {() => changeEditEntry(transDate)}
-                                                title="Edit transaction"
-                                            >
-                                                <i className="fa-solid fa-pen-to-square"></i>
-                                            </button>
-                                            <button 
-                                                className="transaction-delete-btn"
-                                                onClick={() => deleteEntry(transDate)}
-                                                title="Delete transaction"
-                                            >
-                                                <i className="fa-solid fa-trash-can"></i>
-                                            </button>
+                        {incomeToShow && incomeToShow.length > 0 ? (
+                            incomeToShow.map(([transDate, transDetails], index) => {
+                                const timestamp = parseInt(transDate, 10);
+                                return (
+                                    <div className="transaction-card income-card" key={index}> 
+                                        <div className="transaction-card-header">
+                                            <p className="transaction-card-date income-card-date">{formatTimestamp(timestamp, "date-only")}</p>
+                                            
+                                            <div className="transaction-card-actions">
+                                                <button 
+                                                    className="transaction-edit-btn"
+                                                    onClick={() => changeEditEntry(transDate)}
+                                                    title="Edit transaction"
+                                                >
+                                                    <i className="fa-solid fa-pen-to-square"></i>
+                                                </button>
+                                                <button 
+                                                    className="transaction-delete-btn"
+                                                    onClick={() => deleteEntry(transDate)}
+                                                    title="Delete transaction"
+                                                >
+                                                    <i className="fa-solid fa-trash-can"></i>
+                                                </button>
+                                            </div>
                                         </div>
 
+                                        <div className="transaction-card-row income-card-row">
+                                            <span className="transaction-card-label income-card-label">Category:</span>
+                                            <span className="transaction-card-value income-card-value">{transDetails.category}</span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-row income-card-row">
+                                            <span className="transaction-card-label income-card-label">Amount:</span>
+                                            <span className={`transaction-card-amount income-card-amount income`}>
+                                                ${transDetails.amount}
+                                            </span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-row income-card-row">
+                                            <span className="transaction-card-label income-card-label">Type:</span>
+                                            <span className="transaction-card-value income-card-value">{transDetails.type}</span>
+                                        </div>
+                                        
+                                        <div className="transaction-card-description income-card-description">
+                                            <span className="transaction-card-label income-card-label">Description: </span>
+                                            <span className="transaction-card-value income-card-value">{transDetails.description || transDetails.type}</span>
+                                        </div>
                                     </div>
-
-                                    <div className="transaction-card-row income-card-row">
-                                        <span className="transaction-card-label income-card-label">Category:</span>
-                                        <span className="transaction-card-value income-card-value">{transDetails.category}</span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-row income-card-row">
-                                        <span className="transaction-card-label income-card-label">Amount:</span>
-                                        <span className={`transaction-card-amount income-card-amount income`}>
-                                            ${transDetails.amount}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-row income-card-row">
-                                        <span className="transaction-card-label income-card-label">Type:</span>
-                                        <span className="transaction-card-value income-card-value">{transDetails.type}</span>
-                                    </div>
-                                    
-                                    <div className="transaction-card-description income-card-description">
-                                        <span className="transaction-card-label income-card-label">Description: </span>
-                                        <span className="transaction-card-value income-card-value">{transDetails.description || transDetails.type}</span>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })
+                        ) : (
+                            <p>No income transactions for this month</p>
+                        )}
+                        
                         {sortedIncome.length > 3 && (
                             <button 
                                 className="show-more-button"
@@ -480,8 +542,6 @@ export default function FinanceForm(props){
             </div>
         );
     }
-    
-
 
     return(
         <>
@@ -489,9 +549,20 @@ export default function FinanceForm(props){
                 <i className="fa-solid fa-pencil"/>
                 <h2>Start Tracking Today</h2>
             </div>
-            {showModal && (<Modal handleCloseModal = {handleCloseModal}>
-                <Authentication handleCloseModal = {handleCloseModal}/>
-            </Modal>)}
+            
+            {showModal && (
+                <Modal handleCloseModal={handleCloseModal}>
+                    {isEditEntry ? (
+                        <EditTransaction 
+                            handleCloseModal={handleCloseModal} 
+                            transactionID={editingTransaction}
+                            transactionData={globalData[editingTransaction]}
+                        />
+                    ) : (
+                        <Authentication handleCloseModal={handleCloseModal}/>
+                    )}
+                </Modal>
+            )}
             
             {(isLoading && isAuthenticated) && (
                 <p>Loading...</p>
@@ -502,18 +573,7 @@ export default function FinanceForm(props){
                     {renderMonthlySummary()}
                     {renderExpensesSection()}
                     {renderIncomeSection()}
-            
-                    {(isEditEntry && showModal ) && (
-                        <Modal handleCloseModal = {handleCloseModal}>
-                            <EditTransaction 
-                                handleCloseModal = {handleCloseModal} 
-                                transactionID = {editingTransaction}
-                                transactionData = {globalData[editingTransaction]}
-                            />
-                        </Modal>
-                    )}
-
-                 </>
+                </>
             )}
 
             {renderAddEntriesForm()}

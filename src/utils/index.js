@@ -49,9 +49,9 @@ export const budgetStatusLevels = {
 }
 
 // Helper function to create a timestamp for a specific date in UTC, would output something like 1678888200000
-export function createTimestamp(year, month, day, hour = 0, minute = 0) {
+export function createTimestamp(year, month, day, hour = 0, minute = 0, seconds=0) {
     // Note: month is 0-indexed (0 = January, 11 = December)
-    return new Date(year, month - 1, day, hour, minute).getTime();
+    return new Date(year, month - 1, day, hour, minute, seconds).getTime();
 }
 
 
