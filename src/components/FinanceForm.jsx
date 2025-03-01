@@ -16,6 +16,7 @@ import Modal from './Modal';
 import { useAuth } from '../context/AuthContext';
 import { doc, setDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../../firebase';
+import EditTransaction from './EditTransaction';
   
 export default function FinanceForm(props){
     const { isAuthenticated, isData, isLoading} = props
@@ -53,6 +54,14 @@ export default function FinanceForm(props){
     // Initialize with empty arrays instead of null
     const [expensesToShow, setExpensesToShow] = useState([])
     const [incomeToShow, setIncomeToShow] = useState([])
+
+    const [isEditEntry, setIsEditEntry] = useState(false)
+    const [editingTransaction, setEditingTransaction] = useState(null);
+
+
+    function handleCloseModal(){
+        setShowModal(false)
+    }
 
     // Update calculated values when globalData changes
     useEffect(() => {
@@ -170,6 +179,18 @@ export default function FinanceForm(props){
         }
     }
     
+
+
+    function changeEditEntry(transDate) {
+        // Logic for editing a details card
+        setEditingTransaction(transDate)
+        setShowModal(true)
+        setIsEditEntry(true)
+    }
+
+
+
+
     // Form submission handler
     const handleAddEntry = () => {
         if (!isAuthenticated){
@@ -258,6 +279,16 @@ export default function FinanceForm(props){
                                         >
                                             <i className="fa-solid fa-trash-can"></i>
                                         </button>
+
+                                        <button 
+                                            className="transaction-edit-btn"
+                                            onClick = {() => changeEditEntry(transDate)}
+                                            title="Edit transaction"
+                                        >
+                                            <i class="fa-solid fa-pen-to-square"></i>
+                                        </button>
+
+
                                     </div>
                                     
                                     <div className="transaction-card-row expenses-card-row">
@@ -342,6 +373,14 @@ export default function FinanceForm(props){
                                             title="Delete transaction"
                                         >
                                             <i className="fa-solid fa-trash-can"></i>
+                                        </button>
+
+                                        <button 
+                                            className="transaction-edit-btn"
+                                            onClick = {() => changeEditEntry(transDate)}
+                                            title="Edit transaction"
+                                        >
+                                            <i class="fa-solid fa-pen-to-square"></i>
                                         </button>
                                     </div>
 
@@ -438,9 +477,7 @@ export default function FinanceForm(props){
         );
     }
     
-    function handleCloseModal(){
-        setShowModal(false)
-    }
+
 
     return(
         <>
@@ -461,7 +498,18 @@ export default function FinanceForm(props){
                     {renderMonthlySummary()}
                     {renderExpensesSection()}
                     {renderIncomeSection()}
-                </>
+            
+                    {(isEditEntry && showModal ) && (
+                        <Modal handleCloseModal = {handleCloseModal}>
+                            <EditTransaction 
+                                handleCloseModal = {handleCloseModal} 
+                                transactionID = {editingTransaction}
+                                transactionData = {globalData[editingTransaction]}
+                            />
+                        </Modal>
+                    )}
+
+                 </>
             )}
 
             {renderAddEntriesForm()}
