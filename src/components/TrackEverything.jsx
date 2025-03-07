@@ -1,97 +1,64 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { formatTimestamp } from '../utils';
 
 const TrackEverything = () => {
-    const { type } = useParams(); // Gets 'expenses' or 'income' from URL
     const navigate = useNavigate();
     const { globalData, globalUser } = useAuth();
-    const [transactions, setTransactions] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
-    
-    // Filter all transactions by type (expense or income)
-    useEffect(() => {
-        if (!globalUser) {
-            // Redirect to login if not authenticated
-            navigate('/');
-            return;
-        }
-        
-        if (globalData) {
-            try {
-                // Filter transactions by type
-                const filtered = Object.entries(globalData).filter(([time, details]) => {
-                    if (!details || !details.type) return false;
-                    return details.type.toLowerCase() === type.toLowerCase();
-                });
-                
-                // Sort by date (newest first)
-                const sorted = filtered.sort((a, b) => parseInt(b[0], 10) - parseInt(a[0], 10));
-                setTransactions(sorted);
-                setIsLoading(false);
-            } catch (err) {
-                console.error(`Error loading ${type} transactions:`, err);
-                setTransactions([]);
-                setIsLoading(false);
-            }
-        }
-    }, [globalData, globalUser, type, navigate]);
-    
+
+    console.log("Logging global data in the everything tab: ", globalData);
+
+    if (!globalUser) {
+        navigate('/');
+        return null;
+    }
+
     return (
-        <div className="track-everything-container">
-            <div className="section-header">
-                <i className={type === 'income' ? 'fa-solid fa-money-bill-wave' : 'fa-solid fa-credit-card'} />
-                <h2>All {type.charAt(0).toUpperCase() + type.slice(1)} Transactions</h2>
+        <div className="track-everything-container min-h-screen p-5 flex flex-col items-center gap-10">
+                        {/* Wrap Button in a Flex Container */}
+                        <div className="flex mb-5 mt-5">
+                <button 
+                    className="back-button p-2 bg-gray-200 rounded-md w-fit"
+                    onClick={() => navigate('/')}
+                >
+                    <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
+                </button>
             </div>
-            
-            <button className="back-button" onClick={() => navigate('/')}>
-                <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
-            </button>
-            
-            {isLoading ? (
-                <p>Loading all transactions...</p>
-            ) : (
-                <div className="all-transactions">
-                    {transactions.length > 0 ? (
-                        transactions.map(([transDate, transDetails], index) => {
-                            const timestamp = parseInt(transDate, 10);
-                            return (
-                                <div className={`transaction-card ${type}-card`} key={index}>
-                                    <div className="transaction-card-header">
-                                        <p className={`transaction-card-date ${type}-card-date`}>
-                                            {formatTimestamp(timestamp, "full")}
-                                        </p>
-                                    </div>
-                                    
-                                    <div className={`transaction-card-row ${type}-card-row`}>
-                                        <span className={`transaction-card-label ${type}-card-label`}>Category:</span>
-                                        <span className={`transaction-card-value ${type}-card-value`}>
-                                            {transDetails.category}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className={`transaction-card-row ${type}-card-row`}>
-                                        <span className={`transaction-card-label ${type}-card-label`}>Amount:</span>
-                                        <span className={`transaction-card-amount ${type}-card-amount ${type}`}>
-                                            ${transDetails.amount}
-                                        </span>
-                                    </div>
-                                    
-                                    <div className={`transaction-card-description ${type}-card-description`}>
-                                        <span className={`transaction-card-label ${type}-card-label`}>Description: </span>
-                                        <span className={`transaction-card-value ${type}-card-value`}>
-                                            {transDetails.description || transDetails.type}
-                                        </span>
-                                    </div>
-                                </div>
-                            );
-                        })
+
+            <div className="section-header flex items-center gap-2 text-xl font-bold">
+                <h2>All Global Data</h2>
+            </div>
+
+
+
+            <table className="w-full border-collapse border border-gray-300 mt-10">
+                <thead>
+                    <tr className="bg-gray-200">
+                        <th className="border border-gray-300 px-4 py-2">Timestamp</th>
+                        <th className="border border-gray-300 px-4 py-2">Type</th>
+                        <th className="border border-gray-300 px-4 py-2">Category</th>
+                        <th className="border border-gray-300 px-4 py-2">Description</th>
+                        <th className="border border-gray-300 px-4 py-2">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {Object.entries(globalData).length > 0 ? (
+                        Object.entries(globalData).map(([timestamp, details], index) => (
+                            <tr key={index} className="text-center border-b border-gray-300">
+                                <td className="border border-gray-300 px-4 py-2">{new Date(parseInt(timestamp, 10)).toLocaleDateString()}</td>
+                                <td className="border border-gray-300 px-4 py-2">{details.type || 'N/A'}</td>
+                                <td className="border border-gray-300 px-4 py-2">{details.category || 'N/A'}</td>
+                                <td className="border border-gray-300 px-4 py-2">{details.description || 'N/A'}</td>
+                                <td className="border border-gray-300 px-4 py-2">${details.amount || '0.00'}</td>
+                            </tr>
+                        ))
                     ) : (
-                        <p>No {type} transactions found</p>
+                        <tr>
+                            <td colSpan="5" className="text-center p-4">No data found.</td>
+                        </tr>
                     )}
-                </div>
-            )}
+                </tbody>
+            </table>
         </div>
     );
 };
