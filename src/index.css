@@ -1131,3 +1131,25 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+
+
+.track-everything-btn {
+  /* Distinct styling to make it stand out */
+  background-color: #4a90e2;
+  color: white;
+}
+
+.track-everything-btn:hover {
+  background-color: #3a7bc8;
+}
+
+.switch-tab-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.switch-tab-buttons button {
+  flex-grow: 1;
+  margin: 0 5px;
+}

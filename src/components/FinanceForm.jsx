@@ -1,6 +1,3 @@
-
-
-
 import React, { useEffect, useState } from 'react';
 import { 
     calculateTotalMonthlySpending,
@@ -19,10 +16,12 @@ import { useAuth } from '../context/AuthContext';
 import { doc, setDoc, updateDoc, deleteField } from 'firebase/firestore';
 import { db } from '../../firebase';
 import EditTransaction from './EditTransaction';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
   
 export default function FinanceForm(props){
     const { isAuthenticated, isData, isLoading} = props
     const [showModal, setShowModal] = useState(false)
+    const navigate = useNavigate(); // Initialize navigation
     
     // Global stuff
     const { globalData, setGlobalData, globalUser } = useAuth()
@@ -274,6 +273,15 @@ export default function FinanceForm(props){
         );
     }
 
+    // Navigate to detailed tracking pages
+    const navigateToTrackEverything = (type) => {
+        if (!isAuthenticated) {
+            setShowModal(true);
+            return;
+        }
+        navigate(`/track/${type.toLowerCase()}`);
+    };
+
     // Render the Monthly Summary Section with null checks
     const renderMonthlySummary = () => {
         if (totalIncome === null || totalSpending === null) {
@@ -312,6 +320,9 @@ export default function FinanceForm(props){
                     </button>
                     <button onClick={() => {setExpenseTab("details"); setShowAllExpenses(false)}}>
                         <h3>Details</h3>
+                    </button>
+                    <button onClick={() => navigateToTrackEverything("expenses")} className="track-everything-btn">
+                        <h3>Track Everything</h3>
                     </button>
                 </div>
             
@@ -411,6 +422,9 @@ export default function FinanceForm(props){
                     </button>
                     <button onClick={() => {setIncomeTab("details"); setShowAllIncome(false)}}>
                         <h3>Details</h3>
+                    </button>
+                    <button onClick={() => navigateToTrackEverything("income")} className="track-everything-btn">
+                        <h3>Track Everything</h3>
                     </button>
                 </div>
                 
