@@ -34,51 +34,51 @@ const TrackEverything = () => {
     }, {});
 
     return (
-        <div className="track-everything-container min-h-screen p-5 flex flex-col items-center gap-10">
-            {/* Wrap Button in a Flex Container */}
+        <div className="min-h-screen w-full p-5 flex flex-col items-center gap-10">
             <div className="flex mb-5 mt-5">
                 <button 
-                    className="back-button p-2 bg-gray-200 rounded-md w-fit"
+                    className="p-2 bg-gray-200 rounded-md"
                     onClick={() => navigate('/')}
                 >
                     <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
                 </button>
             </div>
 
-            <div className="section-header flex items-center gap-2 text-xl font-bold">
+            <div className="text-xl font-bold text-center">
                 <h2>All Global Data</h2>
+                <div className="w-20 h-1 bg-gray-400 mx-auto mt-1"></div>
             </div>
 
-            <div className="mt-10 w-full">
+            <div className="w-full overflow-x-auto">
                 {Object.entries(groupedData).length > 0 ? (
                     Object.entries(groupedData).map(([monthYear, transactions]) => {
                         transactions.sort((a, b) => a.date - b.date);
                         const monthTotal = transactions.reduce((sum, t) => sum + t.amount, 0);
 
                         return (
-                            <div key={monthYear} className="mb-6 flex flex-col gap-4">
-                                <h2 className="text-lg font-bold p-2">{monthYear}</h2>
-                                <table className="w-full border-collapse border border-gray-300">
-                                    <thead>
-                                        <tr className="bg-gray-200">
-                                            <th className="border border-gray-300 px-4 py-2">Timestamp</th>
-                                            <th className="border border-gray-300 px-4 py-2">Type</th>
-                                            <th className="border border-gray-300 px-4 py-2">Category</th>
-                                            <th className="border border-gray-300 px-4 py-2">Description</th>
-                                            <th className="border border-gray-300 px-4 py-2">Amount</th>
+                            <div key={monthYear} className="mb-6">
+                                <h2 className="text-lg font-bold bg-gray-800 text-white p-2 rounded-md">{monthYear}</h2>
+                                <table className="w-full border border-gray-300 text-white">
+                                    <thead className="bg-gray-700">
+                                        <tr>
+                                            <th className="border border-gray-500 px-4 py-2">Timestamp</th>
+                                            <th className="border border-gray-500 px-4 py-2">Type</th>
+                                            <th className="border border-gray-500 px-4 py-2">Category</th>
+                                            <th className="border border-gray-500 px-4 py-2">Description</th>
+                                            <th className="border border-gray-500 px-4 py-2">Amount</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {transactions.map((t, index) => (
-                                            <tr key={index} className="text-center border-b border-gray-300">
-                                                <td className="border border-gray-300 px-4 py-2">{t.date.toLocaleDateString()}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{t.type}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{t.category}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{t.description}</td>
-                                                <td className="border border-gray-300 px-4 py-2">{formatCurrency(t.amount)}</td>
+                                            <tr key={index} className="text-center border-b border-gray-600">
+                                                <td className="border border-gray-500 px-4 py-2">{t.date.toLocaleDateString()}</td>
+                                                <td className="border border-gray-500 px-4 py-2">{t.type}</td>
+                                                <td className="border border-gray-500 px-4 py-2">{t.category}</td>
+                                                <td className="border border-gray-500 px-4 py-2">{t.description}</td>
+                                                <td className="border border-gray-500 px-4 py-2">{formatCurrency(t.amount)}</td>
                                             </tr>
                                         ))}
-                                        <tr className="font-bold bg-gray-100">
+                                        <tr className="font-bold bg-gray-800 text-white">
                                             <td colSpan="4" className="text-right px-4 py-2">Total for {monthYear}:</td>
                                             <td className="px-4 py-2">{formatCurrency(monthTotal)}</td>
                                         </tr>

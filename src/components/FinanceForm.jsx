@@ -314,17 +314,21 @@ export default function FinanceForm(props){
                     <h3>Expenses for {currentMonth}</h3>
                 </div>
 
-                <div className="switch-tab-buttons">
-                    <button onClick={() => {setExpenseTab("overall"); setShowAllExpenses(false)}}>
+                <div className="switch-tab-buttons flex flex-wrap justify-center gap-4">
+                    <button className="flex items-center justify-center px-4 py-2 text-center" 
+                        onClick={() => {setExpenseTab("overall"); setShowAllExpenses(false)}}>
                         <h3>Overall</h3>
                     </button>
-                    <button onClick={() => {setExpenseTab("details"); setShowAllExpenses(false)}}>
+                    <button className="flex items-center justify-center px-4 py-2 text-center" 
+                        onClick={() => {setExpenseTab("details"); setShowAllExpenses(false)}}>
                         <h3>Details</h3>
                     </button>
-                    <button onClick={() => navigateToTrackEverything("expenses")} className="track-everything-btn">
+                    <button className="track-everything-btn flex items-center justify-center px-4 py-2 text-center"
+                        onClick={() => navigateToTrackEverything("expenses")}>
                         <h3>Track Everything</h3>
                     </button>
                 </div>
+
             
                 {expenseTab === "overall" ? (
                     Object.entries(expenseByCat).map(([category, amount], index) => (
@@ -382,6 +386,7 @@ export default function FinanceForm(props){
                                             <span className="transaction-card-value expenses-card-value">{transDetails.description || transDetails.type}</span>
                                         </div>
                                     </div>
+                                                  
                                 );
                             })
                         ) : (
@@ -416,14 +421,18 @@ export default function FinanceForm(props){
                     <h3>Income for {currentMonth}</h3>
                 </div>
 
-                <div className="switch-tab-buttons">
-                    <button onClick={() => {setIncomeTab("overall"); setShowAllIncome(false)}}>
+
+                <div className="switch-tab-buttons flex flex-wrap justify-center gap-4">
+                    <button className="flex items-center justify-center px-4 py-2 text-center" 
+                        onClick={() => {setExpenseTab("overall"); setShowAllExpenses(false)}}>
                         <h3>Overall</h3>
                     </button>
-                    <button onClick={() => {setIncomeTab("details"); setShowAllIncome(false)}}>
+                    <button className="flex items-center justify-center px-4 py-2 text-center" 
+                        onClick={() => {setExpenseTab("details"); setShowAllExpenses(false)}}>
                         <h3>Details</h3>
                     </button>
-                    <button onClick={() => navigateToTrackEverything("income")} className="track-everything-btn">
+                    <button className="track-everything-btn flex items-center justify-center px-4 py-2 text-center"
+                        onClick={() => navigateToTrackEverything("income")}>
                         <h3>Track Everything</h3>
                     </button>
                 </div>
