@@ -13,7 +13,7 @@ export default function Layout(props) {
     const header = (
         <header>
             <div>
-                <h1 className="text-gradient"> UpOnly </h1>
+                <h1 className="text-gradient font-bold"> UpOnly </h1>
                 <p>For finance tracking</p>
             </div>
         {globalUser ? (
