@@ -34,10 +34,10 @@ const TrackEverything = () => {
     }, {});
 
     return (
-        <div className="min-h-screen w-full p-5 flex flex-col items-center gap-10">
+        <div className="min-h-screen w-full p-5 flex flex-col items-center gap-10 bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-white">
             <div className="flex mb-5 mt-5">
                 <button 
-                    className="p-2 bg-gray-200 rounded-md"
+                    className="p-2 bg-gray-300 text-gray-900 dark:bg-gray-700 dark:text-white rounded-md"
                     onClick={() => navigate('/')}
                 >
                     <i className="fa-solid fa-arrow-left"></i> Back to Dashboard
@@ -46,7 +46,7 @@ const TrackEverything = () => {
 
             <div className="text-xl font-bold text-center">
                 <h2>All Global Data</h2>
-                <div className="w-20 h-1 bg-gray-400 mx-auto mt-1"></div>
+                <div className="w-20 h-1 bg-gray-500 dark:bg-gray-400 mx-auto mt-1"></div>
             </div>
 
             <div className="w-full overflow-x-auto">
@@ -57,9 +57,9 @@ const TrackEverything = () => {
 
                         return (
                             <div key={monthYear} className="mb-6">
-                                <h2 className="text-lg font-bold bg-gray-800 text-white p-2 rounded-md">{monthYear}</h2>
-                                <table className="w-full border border-gray-300 text-white">
-                                    <thead className="bg-gray-700">
+                                <h2 className="text-lg font-bold bg-gray-300 text-gray-900 dark:bg-gray-800 dark:text-white p-2 rounded-md">{monthYear}</h2>
+                                <table className="w-full border border-gray-400 text-gray-900 dark:text-white">
+                                    <thead className="bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-white">
                                         <tr>
                                             <th className="border border-gray-500 px-4 py-2">Timestamp</th>
                                             <th className="border border-gray-500 px-4 py-2">Type</th>
@@ -70,7 +70,7 @@ const TrackEverything = () => {
                                     </thead>
                                     <tbody>
                                         {transactions.map((t, index) => (
-                                            <tr key={index} className="text-center border-b border-gray-600">
+                                            <tr key={index} className="text-center border-b border-gray-500 bg-gray-100 dark:bg-gray-800">
                                                 <td className="border border-gray-500 px-4 py-2">{t.date.toLocaleDateString()}</td>
                                                 <td className="border border-gray-500 px-4 py-2">{t.type}</td>
                                                 <td className="border border-gray-500 px-4 py-2">{t.category}</td>
@@ -78,7 +78,7 @@ const TrackEverything = () => {
                                                 <td className="border border-gray-500 px-4 py-2">{formatCurrency(t.amount)}</td>
                                             </tr>
                                         ))}
-                                        <tr className="font-bold bg-gray-800 text-white">
+                                        <tr className="font-bold bg-gray-300 text-gray-900 dark:bg-gray-800 dark:text-white">
                                             <td colSpan="4" className="text-right px-4 py-2">Total for {monthYear}:</td>
                                             <td className="px-4 py-2">{formatCurrency(monthTotal)}</td>
                                         </tr>
